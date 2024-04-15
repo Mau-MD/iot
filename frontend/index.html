@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Document</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/pure-min.css"
+      integrity="sha384-X38yfunGUhNzHpBaEBsWLO+A0HDYOQi8ufWDkZ0k9e0eXz/tH3II7uKZ9msv++Ls"
+      crossorigin="anonymous"
+    />
+    <script
+      src="https://cdn.socket.io/4.7.5/socket.io.min.js"
+      integrity="sha384-2huaZvOR9iDzHqslqwpR87isEmrfxqyWOF7hr7BY6KG0+hVKLoEXMPUJw3ynWuhO"
+      crossorigin="anonymous"
+    ></script>
+    <style>
+      .container {
+        max-width: 1140px;
+        margin-right: auto;
+        margin-left: auto;
+        padding-right: 1rem;
+        padding-left: 1rem;
+      }
+    </style>
+  </head>
+  <body class="container">
+    <div class="pure-form">
+      <fieldset>
+        <legend>Leds</legend>
+        <fieldset>
+          <legend>Led 1</legend>
+          <button class="pure-button" id="led1-apagar">Apagar LED</button>
+          <button class="pure-button" id="led1-encender">Encender LED</button>
+          <label for="intensidad1">Intensidad</label>
+          <input
+            type="range"
+            id="intensidad1"
+            name="intensidad1"
+            min="0"
+            max="255"
+          />
+          <button id="led1-intensidad-enviar" class="pure-button">
+            Enviar
+          </button>
+        </fieldset>
+        <fieldset>
+          <legend>Led 2</legend>
+          <button class="pure-button" id="led2-apagar">Apagar LED</button>
+          <button class="pure-button" id="led2-encender">Encender LED</button>
+          <label for="intensidad2">Intensidad</label>
+          <input
+            type="range"
+            id="intensidad2"
+            name="intensidad2"
+            min="0"
+            max="255"
+          />
+          <button id="led2-intensidad-enviar" class="pure-button">
+            Enviar
+          </button>
+        </fieldset>
+      </fieldset>
+    </div>
+    <div class="pure-form">
+      <fieldset>
+        <legend>Umbrales</legend>
+        <label for="humedad">Umbral Humedad:</label>
+        <input
+          type="number"
+          id="umbral-humedad"
+          name="humedad"
+          min="0"
+          max="100"
+        />
+        <button id="umbral-humedad-enviar" class="pure-button">Enviar</button>
+        <label for="temperatura">Umbral Temperatura:</label>
+        <input
+          type="number"
+          id="umbral-temperatura"
+          name="temperatura"
+          min="0"
+          max="100"
+        />
+        <button id="umbral-temperatura-enviar" class="pure-button">
+          Enviar
+        </button>
+        <label for="umbral-presion">Umbral Presión Baromética:</label>
+        <input
+          type="number"
+          id="umbral-presion"
+          name="presion"
+          min="0"
+          max="100"
+        />
+        <button id="umbral-presion-enviar" class="pure-button">Enviar</button>
+      </fieldset>
+    </div>
+    <div class="pure-form">
+      <fieldset>
+        <h3>Humedad:</h3>
+        <span id="humedad">0</span>
+
+        <h3>Temperatura:</h3>
+        <span id="temperatura">0</span>
+
+        <h3>Presión Barométrica:</h3>
+        <span id="presion">0</span>
+      </fieldset>
+    </div>
+    <div class="pure-form">
+      <fieldset>
+        <legend>Historial</legend>
+        <table class="pure-table">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Humedad</th>
+              <th>Temperatura</th>
+              <th>Presión Barométrica</th>
+            </tr>
+          </thead>
+          <tbody id="historial">
+            <!-- ejemplo -->
+          </tbody>
+        </table>
+      </fieldset>
+    </div>
+    <script>
+      fetch("http://localhost:3000/events/10").then((res) => {
+        res.json().then((data) => {
+          data.forEach((event) => {
+            switch (event.type) {
+              case "humedad":
+                humedad.innerText = event.value;
+                historial.innerHTML += `<tr>
+                  <td>${new Date(event.timestamp).toISOString()}</td>
+                  <td>${event.value}</td>
+                  <td></td>
+                  <td></td>`;
+                break;
+              case "temperatura":
+                temperatura.innerText = event.value;
+                historial.innerHTML += `<tr>
+                  <td>${new Date(event.timestamp).toISOString()}</td>
+                  <td></td>
+                  <td>${event.value}</td>
+                  <td></td>`;
+                break;
+              case "presion":
+                presion.innerText = event.value;
+                historial.innerHTML += `<tr>
+                  <td>${new Date(event.timestamp).toISOString()}</td>
+                  <td></td>
+                  <td></td>
+                  <td>${event.value}</td>`;
+                break;
+            }
+          });
+        });
+      });
+
+      const socket = io("ws://localhost:3000");
+      socket.on("event", (data) => {
+        switch (data.type) {
+          case "humedad":
+            humedad.innerText = data.value;
+            historial.innerHTML += `<tr>
+              <td>${new Date().toISOString()}</td>
+              <td>${data.value}</td>
+              <td></td>
+              <td></td>`;
+            break;
+          case "temperatura":
+            temperatura.innerText = data.value;
+            historial.innerHTML += `<tr>
+              <td>${new Date().toISOString()}</td>
+              <td></td>
+              <td>${data.value}</td>
+              <td></td>`;
+            break;
+          case "presion":
+            presion.innerText = data.value;
+            historial.innerHTML += `<tr>
+              <td>${new Date().toISOString()}</td>
+              <td></td>
+              <td></td>
+              <td>${data.value}</td>`;
+            break;
+        }
+      });
+
+      const humedad = document.getElementById("humedad");
+      const temperatura = document.getElementById("temperatura");
+      const presion = document.getElementById("presion");
+
+      const historial = document.getElementById("historial");
+
+      const led1Apagar = document.getElementById("led1-apagar");
+      const led1Encender = document.getElementById("led1-encender");
+
+      const led2Apagar = document.getElementById("led2-apagar");
+      const led2Encender = document.getElementById("led2-encender");
+
+      const intensidad1 = document.getElementById("intensidad1");
+      const enviarIntensidad1 = document.getElementById(
+        "led1-intensidad-enviar"
+      );
+
+      const intensidad2 = document.getElementById("intensidad2");
+      const enviarIntensidad2 = document.getElementById(
+        "led2-intensidad-enviar"
+      );
+
+      const umbralHumedad = document.getElementById("umbral-humedad");
+      const enviarUmbralHumedad = document.getElementById(
+        "umbral-humedad-enviar"
+      );
+
+      const umbralTemperatura = document.getElementById("umbral-temperatura");
+      const enviarUmbralTemperatura = document.getElementById(
+        "umbral-temperatura-enviar"
+      );
+      const umbralPresion = document.getElementById("umbral-presion");
+      const enviarUmbralPresion = document.getElementById(
+        "umbral-presion-enviar"
+      );
+
+      led1Apagar.addEventListener("click", () => {
+        socket.emit("action", { type: "led1-apagar" });
+      });
+
+      led1Encender.addEventListener("click", () => {
+        socket.emit("action", { type: "led1-encender" });
+      });
+
+      enviarIntensidad1.addEventListener("click", () => {
+        socket.emit("action", {
+          type: "led1-intensidad",
+          value: intensidad1.value,
+        });
+      });
+
+      led2Apagar.addEventListener("click", () => {
+        socket.emit("action", { type: "led2-apagar" });
+      });
+
+      led2Encender.addEventListener("click", () => {
+        socket.emit("action", { type: "led2-encender" });
+      });
+
+      enviarIntensidad2.addEventListener("click", () => {
+        socket.emit("action", {
+          type: "led2-intensidad",
+          value: intensidad2.value,
+        });
+      });
+
+      enviarUmbralHumedad.addEventListener("click", () => {
+        socket.emit("action", {
+          type: "umbral-humedad",
+          value: umbralHumedad.value,
+        });
+      });
+
+      enviarUmbralTemperatura.addEventListener("click", () => {
+        socket.emit("action", {
+          type: "umbral-temperatura",
+          value: umbralTemperatura.value,
+        });
+      });
+
+      enviarUmbralPresion.addEventListener("click", () => {
+        socket.emit("action", {
+          type: "umbral-presion",
+          value: umbralPresion.value,
+        });
+      });
+    </script>
+  </body>
+</html>
